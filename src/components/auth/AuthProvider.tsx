@@ -5,6 +5,7 @@ import type {IAuthProviderProps} from "../../interfaces/auth/authProviderProps.t
 import type {IAuthResponse} from "../../interfaces/auth/authResponse.ts";
 import type {IAuthContextValue} from "../../interfaces/auth/authContextValue.ts";
 import { AuthContext } from "./AuthContext.tsx";
+import axios from "axios";
 
 const AuthProvider = ({children}: IAuthProviderProps) => {
     const [user, setUser] = useState<IUser | null>(null);
@@ -12,10 +13,27 @@ const AuthProvider = ({children}: IAuthProviderProps) => {
 
     const refreshUser = useCallback(async () => {
         try{
-            const response = await api.get<IAuthResponse>("/fta_auth.php")
+            const response = await api.get<IAuthResponse>("/auth/fta_auth.php")
             setUser(response.data.user)
-        }catch{
-            setUser(null)
+        }catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                console.log(
+                    "Status:",
+                    error.response?.status
+                );
+
+                console.log(
+                    "Backend response:",
+                    error.response?.data
+                );
+
+                console.log(
+                    "Backend message:",
+                    error.response?.data?.message
+                );
+            }
+
+            setUser(null);
         }
     },[])
 
@@ -25,16 +43,36 @@ const AuthProvider = ({children}: IAuthProviderProps) => {
 
             formData.append("usr_email", email);
             formData.append("usr_password", password);
+            try{
+                const response = await api.post<IAuthResponse>("/auth/fta_login.php", formData);
+                console.log("Login response:", response)
+                setUser(response.data.user)
+            }catch(error:unknown){
+                if (axios.isAxiosError(error)) {
+                    console.log(
+                        "Status:",
+                        error.response?.status
+                    );
 
-            const response = await api.post<IAuthResponse>("/fta_login.php", formData);
-            console.log("Login response:", response.data)
-            setUser(response.data.user)
+                    console.log(
+                        "Backend response:",
+                        error.response?.data
+                    );
+
+                    console.log(
+                        "Backend message:",
+                        error.response?.data?.message
+                    );
+                }
+            }
+
+
         },
         []
     )
 
     const logout = useCallback(async () => {
-        await api.post("/fta_logout.php");
+        await api.post("/auth/fta_logout.php");
 
         setUser(null);
     },[])

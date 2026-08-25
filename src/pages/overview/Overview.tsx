@@ -1,136 +1,288 @@
-import useAuth from "../../components/auth/useAuth.ts";
-import { Link } from "react-router-dom";
-import config from "../../../custom.config.ts";
-import { api } from "../../components/api/api.ts";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import axios from "axios";
+
+import useAuth from "../../components/auth/useAuth.ts";
+import { api } from "../../components/api/api.ts";
 import type { IGroup } from "../../interfaces/group.ts";
 
+interface GroupsResponse {
+    success: boolean;
+    message: string;
+    groups: IGroup[];
+}
+
 const OverviewPage = () => {
-    const { user, logout } = useAuth();
+    const { user } = useAuth();
 
     const [groups, setGroups] = useState<IGroup[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState("");
 
+    const totalBalance = 0;
+    const hasActiveRound = false;
+
     useEffect(() => {
         if (!user?.usr_id) {
-            console.log("user does not exist");
             return;
         }
 
+        let isCancelled = false;
+
         const getGroups = async () => {
             try {
-                setIsLoading(true);
-                setErrorMessage("");
-
-                const response = await api.get<{ groups: IGroup[] }>(
-                    "/fta_get_group.php",
-                    {
-                        params: {
-                            creator_id: user.usr_id,
-                        },
-                    }
+                const response = await api.get<GroupsResponse>(
+                    "/group/fta_get_group.php"
                 );
-                console.log(response.data.groups);
-                setGroups(response.data.groups);
-            } catch (error) {
+
+                if (!isCancelled) {
+                    setGroups(response.data.groups ?? []);
+                    setErrorMessage("");
+                }
+            } catch (error: unknown) {
+                if (isCancelled) {
+                    return;
+                }
+
                 console.error(error);
-                setErrorMessage("De groepen konden niet worden opgehaald.");
+
+                if (axios.isAxiosError(error)) {
+                    setErrorMessage(
+                        error.response?.data?.message ??
+                        "De groepen konden niet worden opgehaald."
+                    );
+                } else {
+                    setErrorMessage(
+                        "De groepen konden niet worden opgehaald."
+                    );
+                }
             } finally {
-                setIsLoading(false);
+                if (!isCancelled) {
+                    setIsLoading(false);
+                }
             }
         };
 
         void getGroups();
+
+        return () => {
+            isCancelled = true;
+        };
     }, [user?.usr_id]);
 
-    const groupItems = groups?.map(group =>
-        <div key={group.gro_id} className="col-12 mb-3">
-            <div className="card">
-                <div className="card-body">
-                    <h2 className="h5">{group.gro_name}</h2>
-                    <Link to={`/groups/${group.gro_id}/edit`}>
-                        <button type="button" className="btn btn-primary">
-                            Bewerk groep
-                        </button>
-                    </Link>
-                </div>
-            </div>
-        </div>
-    );
+    const getBalanceLabel = () => {
+        if (totalBalance > 0) {
+            return "Je krijgt nog munten terug.";
+        }
+
+        if (totalBalance < 0) {
+            return "Je moet nog munten betalen.";
+        }
+
+        return "Je balans is helemaal gelijk.";
+    };
 
     return (
-        <main className="container">
-            <div className="row">
-                <div className="col-12">
-                    <h1>Welkom {user?.usr_name}</h1>
+        <main className="container py-4">
+            <section className="row align-items-center mb-4">
+                <div className="col">
+                    <p className="mb-1 text-muted">
+                        Alcatraz Festival
+                    </p>
 
-                    <Link to="/account/edit">
-                        <button type="button" className="btn btn-primary">
-                            Bewerk je profiel
-                        </button>
+                    <h1 className="mb-0">
+                        Welkom {user?.usr_name}
+                    </h1>
+                </div>
+
+                <div className="col-auto">
+                    <Link
+                        to="/account/edit"
+                        className="btn btn-outline-secondary"
+                    >
+                        Accountinstellingen
                     </Link>
                 </div>
+            </section>
 
-                <div className="col-12">
-                    {user?.usr_profile_photo_url && (
-                        <img
-                            src={
-                                config.baseUrl +
-                                user.usr_profile_photo_url
-                            }
-                            alt={`Profielfoto van ${user.usr_name}`}
-                        />
-                    )}
+            <section className="row g-3 mb-4">
+                <div className="col-12 col-lg-8">
+                    <div className="card h-100">
+                        <div className="card-body">
+                            <p className="text-muted mb-2">
+                                Jouw totale balans
+                            </p>
+
+                            <p className="display-5 fw-bold mb-2">
+                                {totalBalance > 0 && "+"}
+                                {totalBalance} munten
+                            </p>
+
+                            <p className="mb-0">
+                                {getBalanceLabel()}
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="col-12">
-                    <p>Jouw code is: {user?.usr_code}</p>
-                </div>
+                <div className="col-12 col-lg-4">
+                    <div className="card h-100">
+                        <div className="card-body">
+                            <p className="text-muted mb-2">
+                                Actieve ronde
+                            </p>
 
-                <div className="col-12">
-                    <h2>Jouw groepen:</h2>
+                            {hasActiveRound ? (
+                                <>
+                                    <h2 className="h5">
+                                        Er loopt een ronde
+                                    </h2>
+
+                                    <Link
+                                        to="/rounds/active"
+                                        className="btn btn-primary"
+                                    >
+                                        Bekijk ronde
+                                    </Link>
+                                </>
+                            ) : (
+                                <>
+                                    <h2 className="h5">
+                                        Geen actieve ronde
+                                    </h2>
+
+                                    <p className="mb-0">
+                                        Start een ronde vanuit een groep.
+                                    </p>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section className="mb-4">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h2 className="h4 mb-0">
+                        Jouw groepen
+                    </h2>
+
+                    <Link to="/groups">
+                        Bekijk alle groepen
+                    </Link>
                 </div>
 
                 {isLoading && (
-                    <div className="col-12">
-                        <p>Groepen laden...</p>
-                    </div>
+                    <p>Groepen laden...</p>
                 )}
 
-                {errorMessage && (
-                    <div className="col-12">
-                        <p className="text-danger">{errorMessage}</p>
+                {!isLoading && errorMessage && (
+                    <div className="alert alert-danger">
+                        {errorMessage}
                     </div>
                 )}
 
                 {!isLoading &&
                     !errorMessage &&
-                    (groups?.length === 0 || !groups) && (
-                        <div className="col-12">
-                            <p>Je hebt nog geen groepen aangemaakt.</p>
+                    groups.length === 0 && (
+                        <div className="card">
+                            <div className="card-body">
+                                <h3 className="h5">
+                                    Je zit nog niet in een groep
+                                </h3>
+
+                                <p>
+                                    Maak een groep aan of laat je door
+                                    een vriend uitnodigen.
+                                </p>
+
+                                <Link
+                                    to="/groups/create"
+                                    className="btn btn-primary"
+                                >
+                                    Maak een groep
+                                </Link>
+                            </div>
                         </div>
                     )}
 
-                {!isLoading && groupItems}
+                {!isLoading &&
+                    !errorMessage &&
+                    groups.length > 0 && (
+                        <div className="row g-3">
+                            {groups.slice(0, 3).map((group) => (
+                                <div
+                                    key={group.gro_id}
+                                    className="col-12 col-md-6 col-xl-4"
+                                >
+                                    <div className="card h-100">
+                                        <div className="card-body">
+                                            <div className="d-flex justify-content-between gap-3">
+                                                <h3 className="h5">
+                                                    {group.gro_name}
+                                                </h3>
 
-                <div className="col-12 mb-3">
-                    <Link to="/create-group">
-                        <button
-                            type="button"
-                            className="btn btn-primary"
-                        >
-                            Maak een groep
-                        </button>
+                                                {group.is_creator && (
+                                                    <span className="badge text-bg-secondary">
+                                                        Beheerder
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            <p className="text-muted">
+                                                Balans wordt binnenkort
+                                                toegevoegd.
+                                            </p>
+
+                                            <Link
+                                                to={`/groups/${group.gro_id}`}
+                                                className="btn btn-outline-primary"
+                                            >
+                                                Bekijk groep
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+            </section>
+
+            <section className="row g-3">
+                <div className="col-12 col-md-6">
+                    <Link
+                        to="/groups"
+                        className="card text-decoration-none h-100"
+                    >
+                        <div className="card-body">
+                            <h2 className="h5">
+                                Alle groepen
+                            </h2>
+
+                            <p className="text-muted mb-0">
+                                Bekijk je groepen, leden en rondes.
+                            </p>
+                        </div>
                     </Link>
                 </div>
 
-                <div className="col-12">
-                    <button type="button" onClick={logout}>
-                        Uitloggen
-                    </button>
+                <div className="col-12 col-md-6">
+                    <Link
+                        to="/account/edit"
+                        className="card text-decoration-none h-100"
+                    >
+                        <div className="card-body">
+                            <h2 className="h5">
+                                Accountinstellingen
+                            </h2>
+
+                            <p className="text-muted mb-0">
+                                Pas je naam, foto en gegevens aan.
+                            </p>
+                        </div>
+                    </Link>
                 </div>
-            </div>
+            </section>
         </main>
     );
 };

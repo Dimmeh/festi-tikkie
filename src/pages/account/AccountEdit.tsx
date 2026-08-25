@@ -1,98 +1,195 @@
-import AccountForm from "../../components/forms/AccountForm.tsx";
-import axios from "axios";
-import {api} from "../../components/api/api.ts";
-import type {IAccountFormValues} from "../../interfaces/account/accountFormValues.ts";
-import {useState} from "react";
+import { Link } from "react-router-dom";
+
 import useAuth from "../../components/auth/useAuth.ts";
-import {Link} from "react-router-dom";
+import config from "../../../custom.config.ts";
 
-const EditAccountPage = () => {
-    const { user, refreshUser } = useAuth();
-
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [message, setMessage] = useState<{
-        type: "success" | "error";
-        text: string;
-    } | null>(null);
+const AccountPage = () => {
+    const { user, logout } = useAuth();
 
     if (!user) {
-        return null;
+        return (
+            <main className="container py-4">
+                <p>Accountgegevens laden...</p>
+            </main>
+        );
     }
 
-    const updateAccount = async (
-        data: IAccountFormValues
-    ): Promise<void> => {
-        setMessage(null);
-        setIsSubmitting(true);
-
-        const formData = new FormData();
-
-        formData.append("name", data.usr_name);
-        formData.append("email", data.usr_email);
-
-        const profilePhoto = data.usr_profile_photo_url?.[0];
-
-        if (profilePhoto) {
-            formData.append("profile_photo", profilePhoto);
-        }
-
-        try {
-            await api.post("/fta_edit_account.php", formData);
-            await refreshUser();
-
-            setMessage({
-                type: "success",
-                text: "Je account is succesvol bijgewerkt.",
-            });
-        } catch (error: unknown) {
-            if (axios.isAxiosError(error)) {
-                setMessage({
-                    type: "error",
-                    text:
-                        error.response?.data?.message ??
-                        "Je account kon niet worden bijgewerkt.",
-                });
-            } else {
-                setMessage({
-                    type: "error",
-                    text: "Er is een onverwachte fout opgetreden.",
-                });
-            }
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
+    const profilePhotoUrl = user.usr_profile_photo_url
+        ? config.baseUrl + user.usr_profile_photo_url
+        : null;
 
     return (
-        <>
-            {message && (
-                <div
-                    className={`alert ${
-                        message.type === "success"
-                            ? "alert-success"
-                            : "alert-danger"
-                    }`}
-                >
-                    {message.text}
-                </div>
-            )}
-            <Link to="/overview">
-                <button type="button" className="btn btn-primary">
-                    Terug naar overzicht
-                </button>
-            </Link>
-            <AccountForm
-                mode="edit"
-                defaultValues={{
-                    usr_name: user.usr_name,
-                    usr_email: user.usr_email,
-                    usr_profile_photo_url: user.usr_profile_photo_url,
-                }}
-                isSubmitting={isSubmitting}
-                onSubmit={updateAccount}
-            />
-        </>
-    );
-}
+        <main className="container py-4">
+            <section className="row align-items-center mb-4">
+                <div className="col">
+                    <p className="text-muted mb-1">
+                        Account
+                    </p>
 
-export default EditAccountPage
+                    <h1 className="mb-0">
+                        Jouw profiel
+                    </h1>
+                </div>
+
+                <div className="col-auto">
+                    <Link
+                        to="/overview"
+                        className="btn btn-outline-secondary"
+                    >
+                        Terug naar dashboard
+                    </Link>
+                </div>
+            </section>
+
+            <section className="row g-4">
+                <div className="col-12 col-lg-4">
+                    <div className="card h-100">
+                        <div className="card-body text-center">
+                            {profilePhotoUrl ? (
+                                <img
+                                    src={profilePhotoUrl}
+                                    alt={`Profielfoto van ${user.usr_name}`}
+                                    className="rounded-circle object-fit-cover mb-3"
+                                    width="160"
+                                    height="160"
+                                />
+                            ) : (
+                                <div
+                                    className="
+                                        rounded-circle
+                                        bg-light
+                                        d-flex
+                                        align-items-center
+                                        justify-content-center
+                                        mx-auto
+                                        mb-3
+                                    "
+                                    style={{
+                                        width: "160px",
+                                        height: "160px",
+                                    }}
+                                >
+                                    <span className="display-4 text-muted">
+                                        {user.usr_name
+                                            .charAt(0)
+                                            .toUpperCase()}
+                                    </span>
+                                </div>
+                            )}
+
+                            <h2 className="h4 mb-1">
+                                {user.usr_name}
+                            </h2>
+
+                            <p className="text-muted mb-3">
+                                {user.usr_email}
+                            </p>
+
+                            <Link
+                                to="/account/edit"
+                                className="btn btn-primary"
+                            >
+                                Bewerk profiel
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="col-12 col-lg-8">
+                    <div className="card mb-4">
+                        <div className="card-body">
+                            <h2 className="h5 mb-4">
+                                Accountgegevens
+                            </h2>
+
+                            <div className="row g-4">
+                                <div className="col-12 col-md-6">
+                                    <p className="text-muted mb-1">
+                                        Naam
+                                    </p>
+
+                                    <p className="fw-semibold mb-0">
+                                        {user.usr_name}
+                                    </p>
+                                </div>
+
+                                <div className="col-12 col-md-6">
+                                    <p className="text-muted mb-1">
+                                        E-mailadres
+                                    </p>
+
+                                    <p className="fw-semibold mb-0">
+                                        {user.usr_email}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="card mb-4">
+                        <div className="card-body">
+                            <h2 className="h5 mb-2">
+                                Jouw vriendcode
+                            </h2>
+
+                            <p className="text-muted">
+                                Deel deze code met vrienden zodat zij jou
+                                kunnen toevoegen aan een groep.
+                            </p>
+
+                            <div className="d-flex flex-wrap align-items-center gap-3">
+                                <span className="display-6 fw-bold mb-0">
+                                    {user.usr_code}
+                                </span>
+
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-primary"
+                                    onClick={() => {
+                                        void navigator.clipboard.writeText(
+                                            String(user.usr_code)
+                                        );
+                                    }}
+                                >
+                                    Kopieer code
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <div className="card-body">
+                            <h2 className="h5">
+                                Accountacties
+                            </h2>
+
+                            <p className="text-muted">
+                                Je kunt hier je profiel aanpassen of
+                                uitloggen.
+                            </p>
+
+                            <div className="d-flex flex-wrap gap-2">
+                                <Link
+                                    to="/account/edit"
+                                    className="btn btn-primary"
+                                >
+                                    Bewerk profiel
+                                </Link>
+
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-danger"
+                                    onClick={logout}
+                                >
+                                    Uitloggen
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    );
+};
+
+export default AccountPage;
