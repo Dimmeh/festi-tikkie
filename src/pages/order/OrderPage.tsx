@@ -13,6 +13,7 @@ const OrderPage = () => {
     const [countPings, setCounterPings] = useState<number>(0);
     const [totalUsers, setTotalUsers] = useState<number>();
     const [totalOrders, setTotalOrders] = useState<number>();
+    // const [orders, setOrders] = useState<IResponseOrders[]>([]);
     const {roundId} = useParams();
     const [errorMessage, setErrorMessage] = useState("");
 
@@ -22,9 +23,12 @@ const OrderPage = () => {
         }
 
         let timeout_id: ReturnType<typeof setTimeout>;
+        let is_cancelled = false;
+
         const get_orders = async () => {
             try {
-                setCounterPings(prev => prev + 1);
+                setCounterPings((prev) => prev + 1);
+
                 const resp = await api.get<IResponseOrderPing>(
                     "order/fta_ping_orders.php",
                     {
@@ -33,28 +37,46 @@ const OrderPage = () => {
                         }
                     }
                 );
-                console.log(resp)
-                setTotalOrders(resp.data.data.total_orders)
-                setTotalUsers(resp.data.data.total_users)
-                if ((totalOrders && totalUsers) && totalOrders === totalUsers) {
-                    console.log(totalOrders, totalUsers);
+
+                // OrderPage bestaat niet meer
+                if (is_cancelled) {
+                    return;
+                }
+
+                const total_orders = resp.data.data.total_orders;
+                const total_users = resp.data.data.total_users;
+
+                setTotalOrders(total_orders);
+                setTotalUsers(total_users);
+
+                if (total_orders === total_users) {
                     setPendingOrders(false);
-                    console.log('alle orders zijn binnen.', resp.data.data);
+
+                    console.log(
+                        "Alle orders zijn binnen.",
+                        resp.data.data
+                    );
+
                     return;
                 }
 
                 timeout_id = setTimeout(() => {
                     void get_orders();
                 }, 2000);
+            }
+            catch (error: unknown) {
+                if (is_cancelled) {
+                    return;
+                }
 
-            } catch (error: unknown) {
                 console.error(error);
 
                 setPendingOrders(false);
+
                 if (axios.isAxiosError(error)) {
                     setErrorMessage(
                         error.response?.data?.message ??
-                        "De groep kon niet worden opgehaald."
+                        "De orders konden niet worden opgehaald."
                     );
                 } else {
                     setErrorMessage(
@@ -63,8 +85,11 @@ const OrderPage = () => {
                 }
             }
         };
+
         void get_orders();
+
         return () => {
+            is_cancelled = true;
             clearTimeout(timeout_id);
         };
     }, [pendingOrders, roundId]);
@@ -80,11 +105,30 @@ const OrderPage = () => {
     }
     return (
         <>
-
-            <h1>Hello order page</h1>
-            <p>Aantal pings: {countPings}</p>
-            <p>Aantal orders: {totalOrders}</p>
-            <p>Aantal personen: {totalUsers}</p>
+            <main className="container py-4">
+                {errorMessage && (
+                    <div className="alert alert-danger">
+                        {errorMessage}
+                    </div>
+                )}
+                { totalOrders !== totalUsers ? (
+                        <section className="row align-items-center mb-4">
+                            <div className="col-12">
+                                <h1>Hello order page</h1>
+                                <p>Aantal pings: {countPings}</p>
+                                <p>Aantal orders: {totalOrders}</p>
+                                <p>Aantal personen: {totalUsers}</p>
+                            </div>
+                        </section>
+                    ) : (
+                        <section className="row align-items-center mb-4">
+                            <div className="col-12">
+                                {}
+                            </div>
+                        </section>
+                    )
+                }
+            </main>
         </>
     )
 }
