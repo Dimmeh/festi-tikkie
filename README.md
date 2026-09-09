@@ -1,75 +1,65 @@
-# React + TypeScript + Vite
+# Festi-tikkie (ontwikkelnaam)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Festi-Tikkie is een webapplicatie voor vriendengroepen die samen naar festivals gaan waar gebruik wordt gemaakt van een cashless betaalsysteem.
 
-Currently, two official plugins are available:
+Wanneer iemand een rondje drank haalt, kan het lastig zijn om bij te houden wie wat heeft besteld en hoeveel iedereen nog verschuldigd is. Festi-Tikkie houdt de bestellingen per ronde bij en helpt de groep om de kosten eerlijk te verdelen.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Functionaliteiten
 
-## React Compiler
+- Account aanmaken en inloggen
+- Groepen aanmaken
+- Vrienden toevoegen aan een groep
+- Rondes aanmaken
+- Groepsleden uitnodigen voor een ronde
+- Producten en aantallen selecteren
+- Bijhouden wanneer alle deelnemers hun bestelling hebben geplaatst
+- Bijhouden van de kosten per deelnemer
+- Ondersteuning voor verschillende festivals, producten en valuta
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Gebruikte technieken
 
-## Expanding the ESLint configuration
+### Frontend
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- React
+- TypeScript
+- Vite
+- React Router
+- Axios
+- React Hook Form
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Backend
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- PHP
+- PDO
+- REST API
+- PHP Sessions
+- Custom SQL Query Builders
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Database
 
-```
+- MariaDB / MySQL
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Architectuur
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+De applicatie bestaat uit een React-frontend die communiceert met een PHP REST API.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+De backend maakt gebruik van PDO voor de communicatie met de database. Daarnaast bevat het project eigen SQL Query Builders voor:
 
-```
+- `SELECT`
+- `INSERT`
+- `UPDATE`
+- `DELETE`
+
+Hierdoor kunnen databasequeries op een consistente en herbruikbare manier worden opgebouwd en blijft de SQL-logica gescheiden van de API-endpoints.
+
+## Achtergrond
+
+Festi-Tikkie is ontstaan vanuit een praktisch probleem tijdens een bezoek met vrienden aan Alcatraz Metal Festival.
+
+Het festival maakt gebruik van een cashless betaalsysteem. Hierdoor kun je niet meer een muntje neerleggen wanneer iemand een rondje haalt. Een gezamenlijke betaalkaart is ook niet altijd eerlijk, omdat niet iedereen evenveel drinkt.
+
+Met Festi-Tikkie kan per ronde worden bijgehouden wie er meedoet, wat iedereen bestelt en welke kosten uiteindelijk onderling verrekend moeten worden.
+
+## Status
+
+Festi-Tikkie is momenteel nog in ontwikkeling.
