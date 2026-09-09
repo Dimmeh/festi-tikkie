@@ -1,4 +1,4 @@
-import type {IGroupMember} from "./group/groupMember.ts";
+import type {IGroupMember} from "./groupMember.ts";
 
 export interface IGroup {
     gro_id: number;

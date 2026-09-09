@@ -5,7 +5,7 @@ import axios from "axios";
 import useAuth from "../../components/auth/useAuth.ts";
 import { api } from "../../components/api/api.ts";
 
-import type { IGroup } from "../../interfaces/group.ts";
+import type { IGroup } from "../../interfaces/group/group.ts";
 import type {IGroupsResponseOverview} from "../../interfaces/group/groupResponseOverview.ts";
 
 const GroupsPage = () => {

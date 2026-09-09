@@ -4,7 +4,8 @@ import axios from "axios";
 
 import useAuth from "../../components/auth/useAuth.ts";
 import { api } from "../../components/api/api.ts";
-import type { IGroup } from "../../interfaces/group.ts";
+import type { IGroup } from "../../interfaces/group/group.ts";
+import ActiveRound from "../../components/rounds/ActiveRound.tsx";
 
 interface GroupsResponse {
     success: boolean;
@@ -20,7 +21,6 @@ const OverviewPage = () => {
     const [errorMessage, setErrorMessage] = useState("");
 
     const totalBalance = 0;
-    const hasActiveRound = false;
 
     useEffect(() => {
         if (!user?.usr_id) {
@@ -34,7 +34,6 @@ const OverviewPage = () => {
                 const response = await api.get<GroupsResponse>(
                     "/group/fta_get_group.php"
                 );
-
                 if (!isCancelled) {
                     setGroups(response.data.groups ?? []);
                     setErrorMessage("");
@@ -44,7 +43,6 @@ const OverviewPage = () => {
                     return;
                 }
 
-                console.error(error);
 
                 if (axios.isAxiosError(error)) {
                     setErrorMessage(
@@ -128,34 +126,7 @@ const OverviewPage = () => {
                 <div className="col-12 col-lg-4">
                     <div className="card h-100">
                         <div className="card-body">
-                            <p className="text-muted mb-2">
-                                Actieve ronde
-                            </p>
-
-                            {hasActiveRound ? (
-                                <>
-                                    <h2 className="h5">
-                                        Er loopt een ronde
-                                    </h2>
-
-                                    <Link
-                                        to="/rounds/active"
-                                        className="btn btn-primary"
-                                    >
-                                        Bekijk ronde
-                                    </Link>
-                                </>
-                            ) : (
-                                <>
-                                    <h2 className="h5">
-                                        Geen actieve ronde
-                                    </h2>
-
-                                    <p className="mb-0">
-                                        Start een ronde vanuit een groep.
-                                    </p>
-                                </>
-                            )}
+                            <ActiveRound group={null}/>
                         </div>
                     </div>
                 </div>
@@ -248,41 +219,6 @@ const OverviewPage = () => {
                     )}
             </section>
 
-            <section className="row g-3">
-                <div className="col-12 col-md-6">
-                    <Link
-                        to="/groups"
-                        className="card text-decoration-none h-100"
-                    >
-                        <div className="card-body">
-                            <h2 className="h5">
-                                Alle groepen
-                            </h2>
-
-                            <p className="text-muted mb-0">
-                                Bekijk je groepen, leden en rondes.
-                            </p>
-                        </div>
-                    </Link>
-                </div>
-
-                <div className="col-12 col-md-6">
-                    <Link
-                        to="/account/edit"
-                        className="card text-decoration-none h-100"
-                    >
-                        <div className="card-body">
-                            <h2 className="h5">
-                                Accountinstellingen
-                            </h2>
-
-                            <p className="text-muted mb-0">
-                                Pas je naam, foto en gegevens aan.
-                            </p>
-                        </div>
-                    </Link>
-                </div>
-            </section>
         </main>
     );
 };

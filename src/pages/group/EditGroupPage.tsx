@@ -5,7 +5,7 @@ import axios from "axios";
 import GroupForm from "../../components/forms/GroupForm.tsx";
 import { api } from "../../components/api/api.ts";
 
-import type { IGroup } from "../../interfaces/group.ts";
+import type { IGroup } from "../../interfaces/group/group.ts";
 import type { IGroupFormValues } from "../../interfaces/group/groupFormValues.ts";
 import type { IGroupResponseDetail} from "../../interfaces/group/groupResponseDetail.ts";
 

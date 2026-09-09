@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useMemo, useState} from "react";
-import type {IUser} from "../../interfaces/user.ts";
+import type {IUser} from "../../interfaces/user/user.ts";
 import {api} from "../api/api.ts";
 import type {IAuthProviderProps} from "../../interfaces/auth/authProviderProps.ts";
 import type {IAuthResponse} from "../../interfaces/auth/authResponse.ts";

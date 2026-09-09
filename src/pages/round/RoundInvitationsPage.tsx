@@ -75,8 +75,10 @@ const RoundInvitationsPage = () => {
         };
     }, []);
 
-    const acceptInvitation = async (
-        invitation: IRoundInvitation
+
+    const confirmInvitationStatus = async (
+        invitation: IRoundInvitation,
+        status:string
     ): Promise<void> => {
         if (acceptingInvitationId !== null) {
             return;
@@ -91,21 +93,29 @@ const RoundInvitationsPage = () => {
             "invusr_id",
             invitation.invusr_id.toString()
         );
+        formData.append(
+            "invusr_status",
+            status
+        );
+
+        console.log(formData.get("invusr_id"), formData.get('invusr_status'));
 
         try {
             const response =
                 await api.post<IAcceptRoundInvitationResponse>(
-                    "/round/fta_accept_round_invitation.php",
+                    "/round/fta_confirm_status_round_invitation.php",
                     formData
                 );
 
             console.log(response)
-
-            navigate(
-                `/groups/${response.data.data.group_id}` +
+            const redirectUrl = status === 'joined'
+                ? `/groups/${response.data.data.group_id}` +
                 `/rounds/${response.data.data.invite_round_id}` +
+                `/events/${response.data.data.event_id}` +
                 `/products`
-            );
+                : `/groups/${response.data.data.group_id}`;
+
+            navigate(redirectUrl);
         } catch (error: unknown) {
             console.error(error);
 
@@ -342,7 +352,7 @@ const RoundInvitationsPage = () => {
                                                 <button
                                                     type="button"
                                                     className="btn btn-success"
-                                                    onClick={() => void acceptInvitation(invitation)}
+                                                    onClick={() => void confirmInvitationStatus(invitation, "joined")}
                                                     disabled={acceptingInvitationId !== null}
                                                 >
                                                     {acceptingInvitationId === invitation.invusr_id ? (
@@ -362,7 +372,7 @@ const RoundInvitationsPage = () => {
                                                 <button
                                                     type="button"
                                                     className="btn btn-outline-danger"
-                                                    disabled
+                                                    onClick={() => void confirmInvitationStatus(invitation, "declined")}
                                                 >
                                                     Weigeren
                                                 </button>

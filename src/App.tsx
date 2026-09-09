@@ -17,7 +17,9 @@ import EditGroupPage from "./pages/group/EditGroupPage.tsx";
 import AccountPage from "./pages/account/AccountPage.tsx";
 import EditAccountPage from "./pages/account/AccountEdit.tsx";
 import RoundInvitationsPage from "./pages/round/RoundInvitationsPage.tsx";
-import ProductPage from "./pages/ProductPage.tsx";
+import ProductPage from "./pages/products/ProductPage.tsx";
+import OrderPage from "./pages/order/OrderPage.tsx";
+import LocationPage from "./pages/location/LocationPage.tsx";
 
 const App = () => {
     return (
@@ -47,7 +49,9 @@ const App = () => {
                 <Route path="/round-invitations" element={<RoundInvitationsPage />} />
 
                 {/* Products */}
-                <Route path="/groups/:groupId/rounds/:inviteRoundId/products" element={<ProductPage />}/>
+                <Route path="/groups/:groupId/events/:eventId/setup-round" element={<LocationPage />}/>
+                <Route path="/groups/:groupId/events/:eventId/rounds/:roundId/products" element={<ProductPage />}/>
+                <Route path="/groups/:groupId/events/:eventId/rounds/:roundId/order" element={<OrderPage />}/>
             </Route>
 
             {/* Redirects */}

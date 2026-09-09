@@ -1,34 +1,21 @@
 import { useEffect, useState } from "react";
-import {Link, useNavigate, useParams} from "react-router-dom";
+import {Link,  useParams} from "react-router-dom";
 import axios from "axios";
 
 import useAuth from "../../components/auth/useAuth.ts";
 import config from "../../../custom.config.ts";
 import { api } from "../../components/api/api.ts";
 
-import type { IGroup } from "../../interfaces/group.ts";
+import type { IGroup } from "../../interfaces/group/group.ts";
 import type {IGroupMember} from "../../interfaces/group/groupMember.ts";
 import type {IGroupResponseDetail} from "../../interfaces/group/groupResponseDetail.ts";
-import type {IRoundInvitationsResponse} from "../../interfaces/round/roundInvitationsResponse.ts";
-interface CreateRoundInvitationResponse {
-    success: boolean;
-    message: string;
-    data: {
-        invite_round_id: number;
-        group_id: number;
-        invited_user_count: number;
-    };
-}
+import ActiveRound from "../../components/rounds/ActiveRound.tsx";
 const GroupDetailPage = () => {
     const { user } = useAuth();
     const { groupId } = useParams<{ groupId: string }>();
-    const navigate = useNavigate();
     const [group, setGroup] = useState<IGroup | null>(null);
-    // const [invitation, setInvitation] = useState<IGroup | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState("");
-    const [isStartingRound, setIsStartingRound] = useState(false);
-    const [startRoundError, setStartRoundError] = useState("");
 
     useEffect(() => {
         if (!user?.usr_id || !groupId) {
@@ -79,43 +66,7 @@ const GroupDetailPage = () => {
                 }
             }
         };
-        const getActiveInvitation = async () => {
-            try {
-                const response = await api.get<IRoundInvitationsResponse>(
-                    "/round/fta_get_round_invitations.php"
-                );
-
-                if (isCancelled) {
-                    return;
-                }
-                console.log(response.data.data.invitation_count)
-            } catch (error: unknown) {
-                if (isCancelled) {
-                    return;
-                }
-
-                console.error(error);
-
-                setGroup(null);
-
-                if (axios.isAxiosError(error)) {
-                    setErrorMessage(
-                        error.response?.data?.message ??
-                        "De uitnodigingen kon niet worden opgehaald."
-                    );
-                } else {
-                    setErrorMessage(
-                        "Er is een onverwachte fout opgetreden."
-                    );
-                }
-            } finally {
-                if (!isCancelled) {
-                    setIsLoading(false);
-                }
-            }
-        }
         void getGroup();
-        void getActiveInvitation();
 
         return () => {
             isCancelled = true;
@@ -123,78 +74,6 @@ const GroupDetailPage = () => {
     }, [groupId, user?.usr_id]);
 
 
-    const startRound = async (): Promise<void> => {
-        if (!group || isStartingRound) {
-            return;
-        }
-
-        setIsStartingRound(true);
-        setStartRoundError("");
-
-        const formData = new FormData();
-
-        formData.append(
-            "group_id",
-            group.gro_id.toString()
-        );
-
-        formData.append(
-            "evn_id",
-            group.evn_id.toString()
-        );
-        try {
-            const response =
-                await api.post<CreateRoundInvitationResponse>(
-                    "/round/fta_create_round_invitation.php",
-                    formData
-                );
-
-            navigate(
-                `/groups/${response.data.data.group_id}` +
-                `/rounds/${response.data.data.invite_round_id}` +
-                `/products`
-            );
-        } catch (error: unknown) {
-            console.error(error);
-
-            if (axios.isAxiosError(error)) {
-                const message =
-                    error.response?.data?.message ??
-                    "De ronde kon niet worden gestart.";
-
-                setStartRoundError(message);
-
-                /*
-                 * Wanneer de backend het bestaande actieve
-                 * ronde-ID terugstuurt, kun je eventueel direct
-                 * naar die ronde navigeren.
-                 */
-                const activeRoundId =
-                    error.response?.data?.data?.invite_round_id;
-
-                const activeGroupId =
-                    error.response?.data?.data?.group_id ??
-                    group.gro_id;
-
-                if (
-                    error.response?.status === 409 &&
-                    activeRoundId
-                ) {
-                    navigate(
-                        `/groups/${activeGroupId}` +
-                        `/rounds/${activeRoundId}` +
-                        `/products`
-                    );
-                }
-            } else {
-                setStartRoundError(
-                    "Er is een onverwachte fout opgetreden."
-                );
-            }
-        } finally {
-            setIsStartingRound(false);
-        }
-    };
     const getProfilePhotoUrl = (
         member: IGroupMember
     ): string | null => {
@@ -265,62 +144,10 @@ const GroupDetailPage = () => {
             </section>
 
             <section className="row g-3 mb-4">
-                <div className="col-12 col-lg-8">
-                    <article className="card h-100">
-                        <div className="card-body p-4">
-                            <p className="text-muted mb-2">
-                                Jouw balans in deze groep
-                            </p>
-
-                            <p className="display-5 fw-bold mb-2">
-                                0 munten
-                            </p>
-
-                            <p className="mb-0">
-                                Er zijn nog geen afgeronde rondes.
-                            </p>
-                        </div>
-                    </article>
-                </div>
-                {startRoundError && (
-                    <div
-                        className="alert alert-danger"
-                        role="alert"
-                    >
-                        {startRoundError}
-                    </div>
-                )}
                 <div className="col-12 col-lg-4">
                     <article className="card h-100">
                         <div className="card-body p-4">
-                            <p className="text-muted mb-2">
-                                Actieve ronde
-                            </p>
-
-                            <h2 className="h5">
-                                Geen actieve ronde
-                            </h2>
-
-                            <p className="text-muted">
-                                Start een ronde en nodig groepsleden uit.
-                            </p>
-
-                            <button
-                                type="button"
-                                className="btn btn-success me-3"
-                                onClick={() => void startRound()}
-                                disabled={isStartingRound}
-                            >
-                                {isStartingRound
-                                    ? "Ronde starten..."
-                                    : "Start ronde"}
-                            </button>
-                            <Link
-                                to="/round-invitations"
-                                className="btn btn-outline-primary"
-                            >
-                                Bekijk uitnodigingen
-                            </Link>
+                            <ActiveRound group={group} />
                         </div>
                     </article>
                 </div>
@@ -502,43 +329,6 @@ const GroupDetailPage = () => {
                                         ? "Beheerder"
                                         : "Groepslid"}
                                 </p>
-                            </div>
-                        </div>
-                    </article>
-
-                    <article className="card">
-                        <div className="card-body">
-                            <h2 className="h5">
-                                Snelle acties
-                            </h2>
-
-                            <div className="d-grid gap-2">
-                                <button
-                                    type="button"
-                                    className="btn btn-success"
-                                    onClick={() => void startRound()}
-                                    disabled={isStartingRound}
-                                >
-                                    {isStartingRound
-                                        ? "Ronde starten..."
-                                        : "Start ronde"}
-                                </button>
-
-                                {group.is_creator && (
-                                    <Link
-                                        to={`/groups/${group.gro_id}/edit`}
-                                        className="btn btn-outline-primary"
-                                    >
-                                        Bewerk groep
-                                    </Link>
-                                )}
-
-                                <Link
-                                    to="/groups"
-                                    className="btn btn-outline-secondary"
-                                >
-                                    Alle groepen
-                                </Link>
                             </div>
                         </div>
                     </article>

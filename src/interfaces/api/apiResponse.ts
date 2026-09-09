@@ -1,4 +1,4 @@
-export interface IGroupResponse {
+export interface IApiResponse {
     success: boolean;
     message: string;
 }

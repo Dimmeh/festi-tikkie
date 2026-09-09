@@ -11,7 +11,6 @@ const PublicRouteComponent = () => {
     if (user) {
         return <Navigate to="/overview" replace />;
     }
-
     return <Outlet />;
 };
 

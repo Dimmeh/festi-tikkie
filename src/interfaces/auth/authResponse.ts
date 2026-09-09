@@ -1,4 +1,4 @@
-import type {IUser} from "../user.ts";
+import type {IUser} from "../user/user.ts";
 
 export interface IAuthResponse {
     success: boolean;

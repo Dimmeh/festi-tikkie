@@ -4,7 +4,7 @@ import axios from "axios";
 
 import { api } from "../../components/api/api.ts";
 
-import type { IGroup } from "../../interfaces/group.ts";
+import type { IGroup } from "../../interfaces/group/group.ts";
 
 interface Product {
     pro_id: number;
