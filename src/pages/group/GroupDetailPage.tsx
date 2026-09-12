@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 import {Link,  useParams} from "react-router-dom";
 import axios from "axios";
 
@@ -10,13 +10,16 @@ import type { IGroup } from "../../interfaces/group/group.ts";
 import type {IGroupMember} from "../../interfaces/group/groupMember.ts";
 import type {IGroupResponseDetail} from "../../interfaces/group/groupResponseDetail.ts";
 import ActiveRound from "../../components/rounds/ActiveRound.tsx";
+import type {IGroupMemberBalance} from "../../interfaces/group/groupMemberBalance.ts";
+
+
 const GroupDetailPage = () => {
     const { user } = useAuth();
     const { groupId } = useParams<{ groupId: string }>();
     const [group, setGroup] = useState<IGroup | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState("");
-
+    // const getBalance = useCallback()
     useEffect(() => {
         if (!user?.usr_id || !groupId) {
             return;
@@ -26,7 +29,7 @@ const GroupDetailPage = () => {
 
         const getGroup = async () => {
             try {
-                const response = await api.get<IGroupResponseDetail>(
+                const responseGroup = await api.get<IGroupResponseDetail>(
                     "/group/fta_get_group.php",
                     {
                         params: {
@@ -35,11 +38,30 @@ const GroupDetailPage = () => {
                     }
                 );
 
+                const responseBalance = await api.get<IGroupMemberBalance>(
+                    "/group/fta_get_balance.php",
+                    {
+                        params: {
+                            group_id: groupId,
+                        },
+                    }
+                )
+
                 if (isCancelled) {
                     return;
                 }
-
-                setGroup(response.data.group);
+                const group = responseGroup.data.group
+                if(responseBalance && responseGroup) {
+                    const data = responseBalance.data.data.balances
+                    for(const balance of data) {
+                        group.gro_members.filter( (member: IGroupMember) => {
+                            if(member.usr_id === balance.invusr_id) {
+                                member.deb_amount = balance.deb_amount
+                            }
+                        })
+                    }
+                }
+                setGroup(group);
                 setErrorMessage("");
             } catch (error: unknown) {
                 if (isCancelled) {
@@ -264,17 +286,25 @@ const GroupDetailPage = () => {
                                                     </div>
                                                 </div>
 
-                                                <hr />
+                                                {
+                                                    member.usr_id !== user?.usr_id && (
+                                                        <>
 
-                                                <div className="d-flex justify-content-between align-items-center">
-                                                    <span className="text-muted">
-                                                        Onderlinge balans
-                                                    </span>
+                                                            <hr />
 
-                                                    <span className="fw-semibold">
-                                                        0 munten
-                                                    </span>
-                                                </div>
+                                                            <div className="d-flex justify-content-between align-items-center">
+                                                                <span className="text-muted">
+                                                                    Onderlinge balans
+                                                                </span>
+
+                                                                <span className={`fw-semibold ${member?.deb_amount ? (Number(member?.deb_amount) < 0 ? "text-danger" : "") : ""} `}>
+                                                                    {member?.deb_amount}
+                                                                </span>
+                                                            </div>
+                                                        </>
+                                                    )
+                                                }
+
                                             </div>
                                         </article>
                                     </div>

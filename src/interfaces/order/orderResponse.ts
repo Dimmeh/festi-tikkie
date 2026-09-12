@@ -1,8 +1,10 @@
 import type {IApiResponse} from "../api/apiResponse.ts";
+import type {IResponseOrderWithUser} from "./orderWithUser.ts";
+import type {IOrderSummary} from "./orderSummary.ts";
 
-export interface OrderResponse extends IApiResponse {
+export interface IOrderResponse extends IApiResponse {
     data: {
-        orders: never[],
-        total_orders: number
+        orders: IResponseOrderWithUser[],
+        summary: IOrderSummary[]
     }
 }
